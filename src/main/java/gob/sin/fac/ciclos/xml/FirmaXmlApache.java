@@ -8,11 +8,14 @@ package gob.sin.fac.ciclos.xml;
 import gob.sin.fac.ciclos.util.XmlUtils;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.Date;
 import javax.xml.parsers.DocumentBuilder;
@@ -77,17 +80,16 @@ public class FirmaXmlApache implements FirmaXml {
 
     @Override
     public PublicKey getPublicKey() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        KeyStore keyStore = KeyStore.getInstance("Windows-MY");
+        keyStore.load(null, null);
+        
+        Certificate certificate = keyStore.getCertificate("certagetic");
+        return certificate.getPublicKey();
     }
 
     @Override
     public Document signEnveloping(Document xmlDoc, String keyName) throws Exception {
         Constants.setSignatureSpecNSprefix("ds");
-
-        // Cargar el keystore.
-        KeyStore keyStore = KeyStore.getInstance("keystoreType");
-        FileInputStream fis = new FileInputStream("keystoreFile");
-        keyStore.load(fis, "keystorePass".toCharArray());
 
         // Crear el nuevo documento contenedor de la firma
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -121,7 +123,7 @@ public class FirmaXmlApache implements FirmaXml {
         xmlSignature.addDocument("#" + "SignedData", transforms, Constants.ALGO_ID_DIGEST_SHA1);
 
         // Obtener la llave privada para firmar.
-        PrivateKey privateKey = (PrivateKey) keyStore.getKey("privateKeyAlias", "privateKeyPass".toCharArray());
+        PrivateKey privateKey = getPrivateKey();
 
         // Adicionar KeyName al KeyInfo
         xmlSignature.getKeyInfo().addKeyName(keyName);
@@ -132,5 +134,14 @@ public class FirmaXmlApache implements FirmaXml {
         log.info(new Date().toString() + " Firma completada");
 
         return document;
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+        KeyStore keyStore = KeyStore.getInstance("Windows-ROOT");
+        keyStore.load(null, null);
+
+        Key key = keyStore.getKey("privadaagetic", null);
+        return (PrivateKey) key;
     }
 }

@@ -11,6 +11,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -76,30 +78,6 @@ public class FirmaUtils {
         boolean checkSignatureValue = false;
 
         try {
-            String archivoProperties = "/media/sf_Data/Projects/agetic/params/public.properties";
-            Properties properties = new Properties();
-            File file = new File(archivoProperties);
-            FileInputStream fis;
-
-            try {
-                fis = new FileInputStream(file);
-                properties.load(fis);
-            } catch (FileNotFoundException e) {
-                System.out.println("Archivo de propiedades no encontrado " + archivoProperties + e);
-                throw new Exception();
-            } catch (IOException e) {
-                System.out.println("Error al leer archivo de propiedades " + archivoProperties + e);
-                throw new Exception();
-            }
-
-            String keystoreType = properties.getProperty("keystore.type");
-            String keystoreFile = properties.getProperty("keystore.file");
-            String keystorePass = properties.getProperty("keystore.pass");
-            String privateKeyAlias = properties.getProperty("private.key.alias");
-            String privateKeyPass = properties.getProperty("private.key.pass");
-            String certificateAlias = properties.getProperty("certificate.alias");
-
-            //KeyStoreInfo ksi = new KeyStoreInfo(keystoreType, keystoreFile, keystorePass, privateKeyAlias, privateKeyPass, certificateAlias);
             checkSignatureValue = digitalSignature.checkSignatureValue(firmaXmlApache.getPublicKey());
         } catch (XMLSignatureException e) {
             e.printStackTrace();
@@ -151,24 +129,22 @@ public class FirmaUtils {
 
     public static String firmarMensaje(String rutaBase, Document document, String keyName)
             throws Exception {
-        //KeyStoreInfo generalPrivateKey = getGeneralPrivateKey(rutaBase, "private.properties");
-
         Document signEnveloping = firmarDocumento(document, keyName);
-
         String mensajeFirmado = stringFromDocument(signEnveloping);
 
         return mensajeFirmado;
     }
 
     public static Document firmarDocumento(Document document, String keyName) throws Exception {
-        FirmaXml signer = FirmaXml.Factory.getFirmaXmlApache();
+        FirmaXml firmaXml = FirmaXml.Factory.getFirmaXmlApache();
 
         try {
-            Document signEnveloping = signer.signEnveloping(document, keyName);
+            Document signEnveloping = firmaXml.signEnveloping(document, keyName);
 
             return signEnveloping;
         } catch (Exception e) {
             // En caso de que no se pueda firmar el mensaje xml
+            e.printStackTrace();
             String codError = "9008";
             String descError = "No se pudo realizar la firma digital";
             throw new Exception(codError + " " + descError);
@@ -186,6 +162,46 @@ public class FirmaUtils {
             System.out.println("Error de parseo de elemento object a cadena" + e);
 
             throw new Exception();
+        }
+    }
+    
+    public static void main(String[] args) {
+        try {
+            Document document = XmlUtils.getDomFromString("<dependency><groupId>javax</groupId></dependency>");
+            String firmado = firmarMensaje("", document, "900");
+            System.out.println("Documento firmado: " + firmado);
+            
+            String verificado = verificarFirmaDigital("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><ds:Signature xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">\n" +
+"<ds:SignedInfo>\n" +
+"<ds:CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315\"/>\n" +
+"<ds:SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\"/>\n" +
+"<ds:Reference URI=\"#SignedData\">\n" +
+"<ds:Transforms>\n" +
+"<ds:Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\n" +
+"</ds:Transforms>\n" +
+"<ds:DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\"/>\n" +
+"<ds:DigestValue>w7SAhmt+qmGl7rj/vdsDAN4Xot4=</ds:DigestValue>\n" +
+"</ds:Reference>\n" +
+"</ds:SignedInfo>\n" +
+"<ds:SignatureValue>\n" +
+"VbQVLPLFMs75euuP9Pq8wylPQxe/k2lVtmIxnTMh0pvk2dM3FfbHIwYt2wlRdPzzqT0Y5/falSiR\n" +
+"rsR6+hdVu7P+bgoGMN3aTDtNqLBQ0uB9yi9Nj9EcDLt6/Gx6+wLVxyGXp9WqmkSAygqu0wwIVLOl\n" +
+"nt89JwtBJ+kdZVXKnLM=\n" +
+"</ds:SignatureValue>\n" +
+"<ds:KeyInfo>\n" +
+"<ds:KeyName>900</ds:KeyName>\n" +
+"</ds:KeyInfo>\n" +
+"<ds:Object Id=\"SignedData\"><dependency><groupId>javax</groupId></dependency></ds:Object>\n" +
+"</ds:Signature>");
+            System.out.println("Verificado: " + verificado);
+        } catch (ParserConfigurationException ex) {
+            Logger.getLogger(FirmaUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SAXException ex) {
+            Logger.getLogger(FirmaUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(FirmaUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(FirmaUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
