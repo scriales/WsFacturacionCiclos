@@ -26,9 +26,12 @@ import org.xml.sax.SAXException;
 
 /**
  *
- * @author sergio
+ * @author Sergio Criales
  */
 public class XmlUtils {
+
+    private XmlUtils() {
+    }
 
     public static Document getDomFromString(String xmlSource) throws ParserConfigurationException,
             SAXException, IOException {

@@ -6,7 +6,6 @@
 package gob.sin.fac.ciclos.xml;
 
 import gob.sin.fac.ciclos.util.XmlUtils;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.Key;
 import java.security.KeyStore;

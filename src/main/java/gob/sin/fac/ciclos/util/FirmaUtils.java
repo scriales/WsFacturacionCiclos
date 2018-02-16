@@ -6,11 +6,7 @@
 package gob.sin.fac.ciclos.util;
 
 import gob.sin.fac.ciclos.xml.FirmaXml;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
@@ -29,9 +25,12 @@ import org.xml.sax.SAXException;
 
 /**
  *
- * @author sergio
+ * @author Sergio Criales
  */
 public class FirmaUtils {
+
+    private FirmaUtils() {
+    }
 
     public static String verificarFirmaDigital(String mensajeXml) throws Exception {
         Document document = null;
@@ -80,7 +79,6 @@ public class FirmaUtils {
         try {
             checkSignatureValue = digitalSignature.checkSignatureValue(firmaXmlApache.getPublicKey());
         } catch (XMLSignatureException e) {
-            e.printStackTrace();
             String codError = "9005";
             String descError = "No se pudo realizar la verificación de firma digital";
             throw new Exception(codError + " " + descError);
@@ -144,7 +142,6 @@ public class FirmaUtils {
             return signEnveloping;
         } catch (Exception e) {
             // En caso de que no se pueda firmar el mensaje xml
-            e.printStackTrace();
             String codError = "9008";
             String descError = "No se pudo realizar la firma digital";
             throw new Exception(codError + " " + descError);
